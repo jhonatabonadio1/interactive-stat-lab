@@ -1,7 +1,12 @@
 # Relatório — Laboratório Estatístico Interativo
 
 **Disciplina:** Matemática e Estatística para Computação — CEUB
-**Equipe:** Plínio Roberto Pereira · Paulo César Farias Silva · Jhonata Bonadio
+
+| Integrante | Matrícula |
+|---|---|
+| Plínio Roberto Pereira | 72650385 |
+| Paulo César Farias Silva | 72650229 |
+| Jhonata Bonadio | 72650384 |
 
 ---
 

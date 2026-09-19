@@ -1,7 +1,7 @@
 # Laboratório Estatístico Interativo — Resumo executivo
 
 **Matemática e Estatística para Computação · CEUB**
-Plínio Roberto Pereira · Paulo César Farias Silva · Jhonata Bonadio
+Plínio Roberto Pereira (72650385) · Paulo César Farias Silva (72650229) · Jhonata Bonadio (72650384)
 Repositório: `github.com/jhonatabonadio1/interactive-stat-lab`
 
 ---
