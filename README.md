@@ -210,5 +210,4 @@ distribuição somando 1, e a propriedade de falta de memória da Exponencial.
 
 - [RELATORIO.md](RELATORIO.md) — fórmulas em notação matemática, resultados da
   validação, explicação de cada módulo e as três descobertas
-- [ROTEIRO_VIDEO.md](ROTEIRO_VIDEO.md) — roteiro da demonstração em vídeo
 - [RESUMO_EXECUTIVO.md](RESUMO_EXECUTIVO.md) — resumo de uma página
