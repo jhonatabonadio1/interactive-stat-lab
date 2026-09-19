@@ -1,0 +1,11 @@
+# Interface
+streamlit>=1.40
+matplotlib>=3.9
+
+# Carregamento e manipulação de dados (NUNCA cálculo de estatística exibida)
+pandas>=2.2
+
+# Referência de validação — usadas apenas em tests/
+numpy>=2.0
+scipy>=1.14
+pytest>=8.0
