@@ -151,8 +151,10 @@ def renderizar(quadro, descricao_filtro):
     nome_x = mod_dados.VARIAVEIS_NUMERICAS[chave_x]["rotulo"].lower()
     nome_y = mod_dados.VARIAVEIS_NUMERICAS[chave_y]["rotulo"].lower()
 
-    efeito = "um aumento" if modelo.b1 >= 0 else "uma redução"
-    efeito_texto = f"**{efeito} de {abs(modelo.b1):.4f}{sufixo_y}**"
+    # "a mais"/"a menos", e não "aumento"/"redução": a segunda forma sugere que
+    # X provoca a mudança em Y, que é exatamente o que uma regressão NÃO mostra.
+    sentido = "a mais" if modelo.b1 >= 0 else "a menos"
+    efeito_texto = f"**{abs(modelo.b1):.4f}{sufixo_y} {sentido}**"
 
     if modelo.x_minimo <= 0 <= modelo.x_maximo:
         leitura_intercepto = (
@@ -169,8 +171,10 @@ def renderizar(quadro, descricao_filtro):
 
     st.markdown(
         f"""
-- **Inclinação (b₁ = {modelo.b1:.4f}).** A cada **1{sufixo_x}** a mais em
-  {nome_x}, o modelo prevê {efeito_texto} em {nome_y}.
+- **Inclinação (b₁ = {modelo.b1:.4f}).** Cada **1{sufixo_x}** a mais em
+  {nome_x} está **associada, em média**, a {efeito_texto} em {nome_y}.
+  O termo *associada* é deliberado: a reta descreve como as duas variáveis
+  variam juntas nos dados observados, e não afirma que uma produz a outra.
 - **Intercepto (b₀ = {modelo.b0:.4f}).** É o valor previsto quando X = 0.
   {leitura_intercepto}
 - **Correlação (r = {modelo.r:.4f}).** Associação linear **{forca} {direcao}**.
