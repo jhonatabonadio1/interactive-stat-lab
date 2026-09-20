@@ -12,5 +12,9 @@ htmlcov/
 .idea/
 .vscode/
 
-# Material de trabalho interno da equipe, não faz parte da entrega
-ROTEIRO_VIDEO.md
+# Template de apoio fornecido pelo professor — material de consulta, não é
+# código nosso. Versioná-lo colocaria um segundo minhastats.py e um segundo
+# app.py no repositório, confundindo quem for avaliar.
+template_sistematizacao/
+
+

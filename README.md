@@ -14,6 +14,8 @@ NumPy e SciPy por **612 testes automatizados**.
 
 ## Equipe
 
+**Grupo Paulo, Jhonata e Plínio**
+
 | Integrante | Matrícula |
 |---|---|
 | Plínio Roberto Pereira | 72650385 |
@@ -165,6 +167,23 @@ classes produzida por `core.frequencias`, e o boxplot a partir dos quartis
 produzidos por `core.minhastats`. Não usamos `plt.hist` nem `plt.boxplot`, que
 fariam os próprios cálculos por dentro e esconderiam justamente a matemática que
 o trabalho pede.
+
+### Onde procurar o núcleo e a interface
+
+O template da disciplina sugere `minhastats.py` e `app.py` na raiz. Dividimos os
+dois em pacotes, porque o núcleo cresceu para cinco módulos e a interface para
+cinco páginas. A correspondência é direta:
+
+| No template | Neste repositório |
+|---|---|
+| `minhastats.py` | [`core/`](core/) — `minhastats.py`, `frequencias.py`, `simulacao.py`, `distribuicoes.py`, `regressao.py` |
+| `app.py` | [`app/`](app/) — `principal.py` e `paginas/` |
+| `test_minhastats.py` | [`tests/`](tests/) — seis arquivos |
+
+Os padrões do `verificar_regra_de_ouro.py` do template foram aplicados a esses
+caminhos: **nenhuma ocorrência** de `numpy`, `pandas`, `scipy` ou `statistics`
+importados em `core/`, e **nenhuma** chamada de estatística pronta
+(`.mean(`, `np.percentile`, `scipy.stats`, `stats.linregress`…) em `app/`.
 
 ## Validação
 
