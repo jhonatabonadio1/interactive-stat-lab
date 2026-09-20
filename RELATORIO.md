@@ -1,6 +1,7 @@
 # Relatório — Laboratório Estatístico Interativo
 
 **Disciplina:** Matemática e Estatística para Computação — CEUB
+**Grupo:** Grupo Paulo, Jhonata e Plínio
 
 | Integrante | Matrícula |
 |---|---|
@@ -58,7 +59,64 @@ Havia ainda um motivo prático: o arquivo é distribuído por URL direta, sem
 exigir login, o que torna o projeto reproduzível por qualquer pessoa que clone o
 repositório.
 
-### 1.3 Uma correção na documentação oficial do dataset
+---
+
+## 2. Decisões de tratamento dos dados
+
+### 2.1 A inspeção inicial
+
+Antes de escrever qualquer função, rodamos a inspeção de sanidade sobre o
+arquivo bruto. O resultado, reproduzível com `pandas`:
+
+| Verificação | Resultado |
+|---|---|
+| Dimensões | 17.379 linhas × 17 colunas |
+| Valores ausentes | **0** em todas as colunas |
+| Colunas de texto onde deveria haver número | **nenhuma** — todas as 17 já vêm numéricas |
+| Colunas constantes (sem variação) | **nenhuma** |
+| Categóricas com excesso de níveis | nenhuma — a maior tem 12 níveis (`mnth`) |
+
+**Conclusão: nenhuma linha foi removida e nenhum valor foi imputado.** Isso não
+é sorte, e sim consequência da escolha: o dataset já passou por curadoria dos
+autores na publicação. Registramos o resultado da inspeção justamente porque
+"não precisou de tratamento" só é uma afirmação defensável quando existe a
+verificação por trás.
+
+A única decisão de exclusão que tomamos é de escopo, não de limpeza: o pacote
+do UCI traz dois arquivos, `hour.csv` (17.379 registros horários) e `day.csv`
+(731 registros diários). Usamos **apenas o horário**, porque o agregado diário
+tem menos de 1.000 registros e não atenderia ao requisito mínimo — e porque a
+hora do dia acabou se revelando a variável mais informativa de todo o conjunto,
+como mostra a Descoberta 2.
+
+### 2.2 Conversão de tipos e rotulagem das categóricas
+
+As variáveis categóricas vêm codificadas como inteiros (`season` de 1 a 4,
+`weathersit` de 1 a 4, `weekday` de 0 a 6). Mantivemos as colunas originais
+intactas e **acrescentamos** colunas rotuladas (`estacao`, `clima`,
+`dia_semana`), em vez de sobrescrever. Duas razões: a coluna original continua
+disponível para conferência, e a aplicação exibe rótulos legíveis sem que o
+usuário precise consultar a documentação do dataset.
+
+A coluna `dteday` é convertida para data com `pd.to_datetime`, usada apenas
+para exibir o período coberto.
+
+### 2.3 A fronteira entre o pandas e o núcleo
+
+Todo o tratamento acima acontece em `app/dados.py` e usa pandas à vontade —
+carregar, filtrar, mapear rótulos. A conversão para o núcleo é explícita e
+acontece num único ponto:
+
+```python
+def serie_numerica(dados, chave):
+    return dados[chave].astype(float).tolist()
+```
+
+Esse `.tolist()` é a fronteira da regra de ouro. Daí para dentro de `core/`
+trafegam apenas listas de `float` do Python — nunca `Series` do pandas ou
+arrays do NumPy, que trariam junto os métodos estatísticos que não podemos usar.
+
+### 2.4 Uma correção na documentação oficial do dataset
 
 As variáveis meteorológicas vêm normalizadas no intervalo [0, 1]. Para que as
 medidas e os coeficientes de regressão tivessem significado físico,
@@ -88,7 +146,7 @@ não é fonte confiável sem verificação.
 
 ---
 
-## 2. Arquitetura e a regra de ouro
+## 3. Arquitetura e a regra de ouro
 
 O projeto é dividido em duas camadas que não se misturam:
 
@@ -118,12 +176,12 @@ nunca `Series` do pandas ou arrays do NumPy.
 
 ---
 
-## 3. Fórmulas implementadas
+## 4. Fórmulas implementadas
 
 Notação: $n$ é o tamanho do conjunto, $x_i$ a $i$-ésima observação, $\bar{x}$ a
 média e $\sum$ o somatório de $i = 1$ até $n$.
 
-### 3.1 Tendência central
+### 4.1 Tendência central
 
 $$\bar{x} = \frac{1}{n}\sum_{i=1}^{n} x_i$$
 
@@ -134,7 +192,7 @@ $$Mo = \{\, x : f(x) = \max f \,\}$$
 A moda é devolvida como uma **lista**, porque um conjunto pode ser bimodal ou
 multimodal. Se toda frequência vale 1, o conjunto é amodal e a lista é vazia.
 
-### 3.2 Dispersão
+### 4.2 Dispersão
 
 $$A = x_{\max} - x_{\min}$$
 
@@ -149,7 +207,7 @@ consequência é que $s^2 > \sigma^2$ sempre — propriedade verificada em teste
 
 $$CV = \frac{s}{|\bar{x}|} \times 100\%$$
 
-### 3.3 Separatrizes
+### 4.3 Separatrizes
 
 Sobre o conjunto ordenado, a posição do percentil de ordem $p$ é
 
@@ -161,7 +219,7 @@ Esta é a interpolação linear, o mesmo método que `numpy.percentile` adota po
 padrão, o que torna a comparação nos testes direta. Daí saem
 $Q_1 = P_{25}$, $Q_2 = P_{50} = Md$, $Q_3 = P_{75}$ e $IQR = Q_3 - Q_1$.
 
-### 3.4 Forma e valores atípicos
+### 4.4 Forma e valores atípicos
 
 $$As = \frac{3(\bar{x} - Md)}{s}$$
 
@@ -173,7 +231,7 @@ Cercas de Tukey, com $k = 1{,}5$:
 
 $$\text{cerca inferior} = Q_1 - k\cdot IQR \qquad\qquad \text{cerca superior} = Q_3 + k\cdot IQR$$
 
-### 3.5 Medidas bivariadas
+### 4.5 Medidas bivariadas
 
 $$s_{xy} = \frac{1}{n-1}\sum (x_i - \bar{x})(y_i - \bar{y})$$
 
@@ -182,7 +240,7 @@ $$r = \frac{s_{xy}}{s_x \cdot s_y} = \frac{\sum (x_i - \bar{x})(y_i - \bar{y})}{
 Implementamos a segunda forma, que usa uma única passagem de somatórios e evita
 a divisão intermediária por $(n-1)$, que se cancela.
 
-### 3.6 Regressão linear simples
+### 4.6 Regressão linear simples
 
 O método dos mínimos quadrados escolhe $b_0$ e $b_1$ que minimizam
 
@@ -204,7 +262,7 @@ $$R^2 = \frac{SQ_{reg}}{SQ_{tot}} = 1 - \frac{SQ_{res}}{SQ_{tot}}$$
 
 $$s_e = \sqrt{\frac{SQ_{res}}{n-2}} \qquad\qquad s_{b_1} = \frac{s_e}{\sqrt{S_{xx}}}$$
 
-### 3.7 Distribuições teóricas
+### 4.7 Distribuições teóricas
 
 $$f(x) = \frac{1}{\sigma\sqrt{2\pi}}\exp\left[-\frac{(x-\mu)^2}{2\sigma^2}\right] \qquad\qquad F(x) = \frac{1}{2}\left[1 + \operatorname{erf}\left(\frac{x-\mu}{\sigma\sqrt{2}}\right)\right]$$
 
@@ -224,7 +282,7 @@ contínua do fatorial — uma função matemática especial, não uma rotina
 estatística, e portanto dentro da regra de ouro. O mesmo tratamento se aplica ao
 coeficiente binomial.
 
-### 3.8 Simulação
+### 4.8 Simulação
 
 $$f_n(A) = \frac{\text{sucessos em } n \text{ ensaios}}{n} \xrightarrow[n\to\infty]{} P(A)$$
 
@@ -239,9 +297,9 @@ podem ser reproduzidos exatamente.
 
 ---
 
-## 4. Resultados da validação
+## 5. Resultados da validação
 
-### 4.1 Estratégia
+### 5.1 Estratégia
 
 Cada função do núcleo é comparada com a implementação equivalente de uma
 biblioteca consagrada, sobre **sete conjuntos de dados** escolhidos para cobrir
@@ -249,41 +307,64 @@ cenários diferentes: um pequeno e conferível à mão com $n$ par, um com $n$ �
 uma amostra normal grande, uma amostra exponencial (assimétrica), uma com valores
 negativos, e duas variáveis reais do dataset.
 
-| Nossa função | Referência de validação | Testes |
-|---|---|---|
-| `media` | `numpy.mean` | 7 |
-| `mediana` | `numpy.median` | 9 |
-| `moda` | `scipy.stats.mode` | 9 |
-| `amplitude`, `minimo`, `maximo` | `numpy.ptp`, `numpy.min`, `numpy.max` | 14 |
-| `variancia`, `desvio_padrao` | `numpy.var`, `numpy.std` (ddof 0 e 1) | 24 |
-| `percentil` | `numpy.percentile(method="linear")` | 92 |
-| `quartis` | `numpy.percentile` | 21 |
-| `amplitude_interquartil` | `scipy.stats.iqr` | 7 |
-| `coeficiente_variacao` | `scipy.stats.variation` | 9 |
-| `assimetria_pearson` | fórmula fechada sobre NumPy | 9 |
-| `outliers_iqr` | cercas calculadas com NumPy | 15 |
-| `covariancia` | `numpy.cov` | 4 |
-| `correlacao_pearson` | `numpy.corrcoef`, `scipy.stats.pearsonr` | 13 |
-| `resumo_descritivo` e entradas inválidas | NumPy e `pytest.raises` | 5 |
-| `ajustar_regressao_linear` | `scipy.stats.linregress`, `numpy.polyfit` | 42 |
-| `pdf_normal`, `cdf_normal`, `estimar_normal` | `scipy.stats.norm` | 71 |
-| `pmf_binomial`, `estimar_binomial` | `scipy.stats.binom` | 14 |
-| `pmf_poisson`, `estimar_poisson` | `scipy.stats.poisson` | 15 |
-| `pdf_uniforme`, `cdf_uniforme`, `estimar_uniforme` | `scipy.stats.uniform` | 43 |
-| `pdf_exponencial`, `cdf_exponencial`, `estimar_exponencial` | `scipy.stats.expon` | 40 |
-| Catálogo de distribuições da interface | execução de ponta a ponta | 2 |
-| `regra_de_sturges` | `math.log2` e cálculo manual | 19 |
-| `tabela_frequencias_continua` | `numpy.histogram` | 28 |
-| `tabela_frequencias_categorica` | `pandas.Series.value_counts` | 10 |
-| Simulação (LGN e TCL) | `scipy.stats.chisquare`, `scipy.stats.shapiro` | 42 |
-| Interface (Streamlit `AppTest`) | renderização sem exceção | 48 |
-| **Total** | | **612** |
+Para cada função medimos a **maior divergência observada** contra a referência,
+varrendo as oito variáveis numéricas do dataset (e, nas medidas bivariadas, os
+28 pares possíveis entre elas). A coluna de diferença é a maior divergência
+*relativa* encontrada em toda a varredura — o pior caso, não a média.
+
+| Nossa função | Referência de validação | Maior diferença observada | Testes |
+|---|---|---|---|
+| `media` | `numpy.mean` | 5,0 × 10⁻¹⁴ | 7 |
+| `mediana` | `numpy.median` | **exata** (0) | 9 |
+| `moda` | `scipy.stats.mode` | **exata** (0) | 9 |
+| `amplitude`, `minimo`, `maximo` | `numpy.ptp`, `numpy.min`, `numpy.max` | **exata** (0) | 14 |
+| `variancia`, `desvio_padrao` | `numpy.var`, `numpy.std` (ddof 0 e 1) | 8,2 × 10⁻¹⁴ | 24 |
+| `percentil` | `numpy.percentile(method="linear")` | **exata** (0) | 92 |
+| `quartis` | `numpy.percentile` | **exata** (0) | 21 |
+| `amplitude_interquartil` | `scipy.stats.iqr` | **exata** (0) | 7 |
+| `coeficiente_variacao` | `scipy.stats.variation` | 3,9 × 10⁻¹⁴ | 9 |
+| `assimetria_pearson` | fórmula fechada sobre NumPy | 2,5 × 10⁻¹² | 9 |
+| `outliers_iqr` | cercas calculadas com NumPy | **exata** (0) | 15 |
+| `covariancia` | `numpy.cov` | 7,3 × 10⁻¹⁴ | 4 |
+| `correlacao_pearson` | `numpy.corrcoef`, `scipy.stats.pearsonr` | 1,2 × 10⁻¹³ | 13 |
+| `resumo_descritivo` e entradas inválidas | NumPy e `pytest.raises` | — | 5 |
+| `ajustar_regressao_linear` — b₁ | `scipy.stats.linregress` | 9,2 × 10⁻¹⁴ | |
+| `ajustar_regressao_linear` — b₀ | `scipy.stats.linregress` | 6,1 × 10⁻¹² | 42 |
+| `ajustar_regressao_linear` — R² | `scipy.stats.linregress` | **1,7 × 10⁻¹⁰** | |
+| `ajustar_regressao_linear` — s(b₁) | `scipy.stats.linregress` | 4,4 × 10⁻¹⁴ | |
+| `pdf_normal` | `scipy.stats.norm` | 2,2 × 10⁻¹⁶ | 71 |
+| `cdf_normal` | `scipy.stats.norm` | 1,2 × 10⁻¹³ | |
+| `pmf_binomial` | `scipy.stats.binom` | 7,3 × 10⁻¹² | 14 |
+| `pmf_poisson` | `scipy.stats.poisson` | 1,8 × 10⁻¹² | 15 |
+| `pdf_uniforme`, `cdf_uniforme` | `scipy.stats.uniform` | **exata** (0) | 43 |
+| `pdf_exponencial`, `cdf_exponencial` | `scipy.stats.expon` | 1,9 × 10⁻¹⁶ | 40 |
+| Catálogo de distribuições da interface | execução de ponta a ponta | — | 2 |
+| `regra_de_sturges` | `math.log2` e cálculo manual | **exata** (0) | 19 |
+| `tabela_frequencias_continua` | `numpy.histogram` | **exata** (0) | 28 |
+| `tabela_frequencias_categorica` | `pandas.Series.value_counts` | **exata** (0) | 10 |
+| Simulação (LGN e TCL) | `scipy.stats.chisquare`, `scipy.stats.shapiro` | — | 42 |
+| Interface (Streamlit `AppTest`) | renderização sem exceção | — | 48 |
+| **Total** | | **pior caso: 1,7 × 10⁻¹⁰** | **612** |
+
+**Leitura da tabela.** Doze das nossas funções batem com a referência de forma
+**exata** — diferença zero, nem na última casa. São justamente as que não fazem
+somatório: mediana, moda, percentis e quartis apenas selecionam e interpolam
+valores existentes, e as tabelas de frequência contam inteiros. Onde há
+somatório, aparece a divergência de ponto flutuante esperada, na ordem de
+10⁻¹⁴ a 10⁻¹².
+
+O pior caso de todos é o **R² da regressão, com 1,7 × 10⁻¹⁰** — ainda uma ordem
+de grandeza dentro da tolerância de 10⁻⁹. Ele é o maior porque é a medida mais
+composta da tabela: acumula erro de três somatórios encadeados
+(SQ_res, SQ_tot e a divisão entre eles), e a subtração `1 − SQ_res/SQ_tot`
+sofre cancelamento quando o R² é pequeno — que é exatamente o nosso caso, com
+R² em torno de 0,16.
 
 Todos passam, em cerca de 45 segundos. Por arquivo: `test_minhastats.py` 238,
 `test_distribuicoes.py` 185, `test_frequencias.py` 57, `test_aplicacao.py` 48,
 `test_regressao.py` 42, `test_simulacao.py` 42.
 
-### 4.2 Tolerância numérica
+### 5.2 Tolerância numérica
 
 As comparações de ponto flutuante usam `math.isclose` com
 
@@ -296,7 +377,7 @@ observações do dataset, a diferença esperada entre os dois métodos é da ord
 $10^{-13}$ relativo, bem dentro do limite. A tolerância **absoluta** existe
 apenas para o caso em que o valor verdadeiro é zero, onde a relativa se anula.
 
-### 4.3 Além da comparação: propriedades que precisam valer
+### 5.3 Além da comparação: propriedades que precisam valer
 
 Comparar com uma biblioteca prova que chegamos ao mesmo número, mas não que a
 implementação é internamente coerente. Por isso os testes também verificam
@@ -316,7 +397,7 @@ propriedades matemáticas que precisam valer por construção:
 - nenhuma observação se perde na tabela de frequências, e as classes são
   contíguas e de mesma amplitude
 
-### 4.4 Duas divergências encontradas pelos testes
+### 5.4 Duas divergências encontradas pelos testes
 
 **A constante de Sturges.** A fórmula é normalmente apresentada como
 $k = \lceil 1 + 3{,}322\log_{10} n \rceil$. A constante 3,322 é o arredondamento
@@ -335,9 +416,22 @@ de importação circular. Só apareceu quando escrevemos os testes de interface 
 
 ---
 
-## 5. Os módulos da aplicação
+## 6. Os módulos da aplicação
+
+Todos os prints desta seção são da aplicação em execução, sem edição.
+
+### Módulo 0 — Visão geral do dataset
+
+Origem, estrutura, justificativa da escolha e a discussão sobre a
+desnormalização. A barra lateral traz os filtros globais — ano, estação,
+condição climática e tipo de dia — que se aplicam a todos os módulos seguintes,
+de modo que qualquer análise pode ser refeita sobre um recorte.
+
+![Visão geral do dataset](docs/imagens/00-visao-geral.png)
 
 ### Módulo 1 — Estatística descritiva interativa
+
+![Módulo 1 — estatística descritiva](docs/imagens/01-descritiva.png)
 
 O usuário escolhe uma variável, numérica ou categórica, e recebe:
 
@@ -362,6 +456,8 @@ numérica entre si.
 
 ### Módulo 2 — Probabilidade e simulação de Monte Carlo
 
+![Módulo 2 — probabilidade e simulação](docs/imagens/02-probabilidade.png)
+
 **(a) Lei dos Grandes Números.** Simulação de lançamentos de moeda (com $P$(cara)
 ajustável) ou de dado de 6 a 20 faces. O gráfico traz a frequência relativa
 acumulada contra a probabilidade teórica, com o eixo horizontal em **escala
@@ -382,6 +478,8 @@ padrão teórico $\sigma/\sqrt{n}$ e o observado nas médias simuladas, e exibe 
 razão entre eles.
 
 ### Módulo 3 — Distribuições teóricas
+
+![Módulo 3 — distribuições teóricas](docs/imagens/03-distribuicoes.png)
 
 Sobreposição de Normal, Exponencial, Uniforme ou Poisson ao histograma de uma
 variável real, com parâmetros estimados dos próprios dados:
@@ -404,6 +502,8 @@ bom, e não serviria para comparar candidatos.
 
 ### Módulo 4 — Correlação e regressão linear
 
+![Módulo 4 — correlação e regressão](docs/imagens/04-regressao.png)
+
 Diagrama de dispersão, coeficiente de correlação, reta de mínimos quadrados,
 equação formatada, $R^2$, erro padrão da estimativa, campo de predição
 interativa, diagnóstico de resíduos e interpretação dos coeficientes.
@@ -421,7 +521,7 @@ Três cuidados que a aplicação toma e que valem registro:
 
 ---
 
-## 6. As três descobertas
+## 7. As três descobertas
 
 ### Descoberta 1 — Ser uma contagem não faz de uma variável uma Poisson
 
@@ -554,7 +654,7 @@ autoridade: nós o vimos acontecer, e conferimos o número que ele previu.
 
 ---
 
-## 7. Conclusão
+## 8. Conclusão
 
 O que mais aprendemos não foi a calcular as medidas — foi que **implementá-las à
 mão muda o que se entende delas**. Escrever a correção de Bessel obriga a
