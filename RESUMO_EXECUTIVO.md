@@ -2,7 +2,7 @@
 
 **Matemática e Estatística para Computação · CEUB**
 **Grupo Paulo, Jhonata e Plínio**
-Plínio Roberto Pereira (72650385) · Paulo César Farias Silva (72650229) · Jhonata Bonadio (72650384)
+Plínio Roberto Pereira (72650385) · Paulo César Farias Silva (72650229) · Jhonata Henrique Lima Bonadio (72650384)
 Repositório: `github.com/jhonatabonadio1/interactive-stat-lab`
 
 ---

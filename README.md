@@ -20,7 +20,7 @@ NumPy e SciPy por **612 testes automatizados**.
 |---|---|
 | Plínio Roberto Pereira | 72650385 |
 | Paulo César Farias Silva | 72650229 |
-| Jhonata Bonadio | 72650384 |
+| Jhonata Henrique Lima Bonadio | 72650384 |
 
 ## O dataset
 
